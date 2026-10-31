@@ -9,12 +9,9 @@ Tiny pixel games about tiramisu. Play in your browser, post your score, and try 
 | Game | What you do | Controls |
 | --- | --- | --- |
 | **Tiramisu Factory** | Cups ride a looping conveyor belt. Drop ladyfinger, espresso, mascarpone and toppings from six machines in the right order. Khanh eats every finished cup. | Tap a machine, or keys `1`–`6` |
-
-### Still in the oven
-
-- **Tiramisu Rain**: catch falling slices, dodge broccoli.
-- **Khanh's Bakery**: stack tiramisu layers in recipe order.
-- **Tiramisu for Two**: Khanh and Petit chat noir cook as a team.
+| **Tiramisu Rain** | Tiramisu falls from the sky. Catch slices in Khanh's mouth, grab golden cups for an extra heart, dodge the broccoli. | Drag, or `←` `→` |
+| **Khanh's Bakery** | Catch ingredients in the order on the recipe ticket to build classic, matcha and strawberry tiramisu. | Drag, or `←` `→` |
+| **Tiramisu for Two** | Petit chat noir catches ingredients on the top shelf and tosses them to Khanh. Play either one and swap anytime. | Drag, or `←` `→`, `Space` to swap |
 
 ## Tiramisu Factory tips
 

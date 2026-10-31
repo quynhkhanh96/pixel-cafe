@@ -91,7 +91,7 @@ footer{font-size:17px;color:var(--muted);text-align:center}
 
   <article class="card" id="tiramisu-factory">
     <div class="card-top">
-      <div class="thumb"><canvas id="thumbFactory" width="160" height="120" aria-label="Tiramisu Factory preview"></canvas></div>
+      <div class="thumb"><canvas data-thumb="tiramisu-factory" width="160" height="120" aria-label="Tiramisu Factory preview"></canvas></div>
       <div class="info">
         <h2>Tiramisu Factory</h2>
         <div class="chips"><span class="chip">CONVEYOR</span><span class="chip">TIMING</span><span class="chip">PHONE OK</span></div>
@@ -99,21 +99,63 @@ footer{font-size:17px;color:var(--muted);text-align:center}
         <a class="play" href="games/tiramisu-factory/">Play</a>
       </div>
     </div>
-    <section class="board" aria-labelledby="boardFactoryTitle">
-      <div class="board-head"><h3 id="boardFactoryTitle">TOP 10 · TIRAMISU FACTORY</h3><button class="refresh" data-game="tiramisu-factory">Refresh</button></div>
-      <div class="board-scroll"><div id="board-tiramisu-factory" class="status">Loading scores…</div></div>
-      <div class="note" id="boardNote" hidden>Scores are saved on this device until the online leaderboard is connected.</div>
+    <section class="board" aria-labelledby="board_tiramisu_factory">
+      <div class="board-head"><h3 id="board_tiramisu_factory">TOP 10 · TIRAMISU FACTORY</h3><button class="refresh" data-game="tiramisu-factory">Refresh</button></div>
+      <div class="board-scroll"><div id="board-tiramisu-factory" class="status" data-second="CUPS">Loading scores…</div></div>
+      <div class="note localnote" hidden>Scores are saved on this device until the online leaderboard is connected.</div>
     </section>
   </article>
 
-  <section class="oven" aria-labelledby="ovenTitle">
-    <h2 id="ovenTitle">STILL IN THE OVEN</h2>
-    <ul>
-      <li><b>Tiramisu Rain</b><span>Catch falling slices, dodge broccoli.</span></li>
-      <li><b>Khanh's Bakery</b><span>Stack layers in recipe order.</span></li>
-      <li><b>Tiramisu for Two</b><span>Khanh and Petit chat noir cook as a team.</span></li>
-    </ul>
-  </section>
+  <article class="card" id="tiramisu-rain">
+    <div class="card-top">
+      <div class="thumb"><canvas data-thumb="tiramisu-rain" width="160" height="120" aria-label="Tiramisu Rain preview"></canvas></div>
+      <div class="info">
+        <h2>Tiramisu Rain</h2>
+        <div class="chips"><span class="chip">CATCH</span><span class="chip">EASY START</span><span class="chip">PHONE OK</span></div>
+        <p>Tiramisu is falling from the sky. Move Khanh to catch slices in her mouth, grab the golden cups for an extra heart, and dodge the broccoli.</p>
+        <a class="play" href="games/tiramisu-rain/">Play</a>
+      </div>
+    </div>
+    <section class="board" aria-labelledby="board_tiramisu_rain">
+      <div class="board-head"><h3 id="board_tiramisu_rain">TOP 10 · TIRAMISU RAIN</h3><button class="refresh" data-game="tiramisu-rain">Refresh</button></div>
+      <div class="board-scroll"><div id="board-tiramisu-rain" class="status" data-second="SLICES">Loading scores…</div></div>
+      <div class="note localnote" hidden>Scores are saved on this device until the online leaderboard is connected.</div>
+    </section>
+  </article>
+
+  <article class="card" id="khanhs-bakery">
+    <div class="card-top">
+      <div class="thumb"><canvas data-thumb="khanhs-bakery" width="160" height="120" aria-label="Khanh's Bakery preview"></canvas></div>
+      <div class="info">
+        <h2>Khanh's Bakery</h2>
+        <div class="chips"><span class="chip">CATCH</span><span class="chip">RECIPES</span><span class="chip">PHONE OK</span></div>
+        <p>Khanh balances a glass on a tray. Catch ingredients in the order the ticket shows to build classic, matcha and strawberry tiramisu.</p>
+        <a class="play" href="games/khanhs-bakery/">Play</a>
+      </div>
+    </div>
+    <section class="board" aria-labelledby="board_khanhs_bakery">
+      <div class="board-head"><h3 id="board_khanhs_bakery">TOP 10 · KHANH'S BAKERY</h3><button class="refresh" data-game="khanhs-bakery">Refresh</button></div>
+      <div class="board-scroll"><div id="board-khanhs-bakery" class="status" data-second="MADE">Loading scores…</div></div>
+      <div class="note localnote" hidden>Scores are saved on this device until the online leaderboard is connected.</div>
+    </section>
+  </article>
+
+  <article class="card" id="tiramisu-for-two">
+    <div class="card-top">
+      <div class="thumb"><canvas data-thumb="tiramisu-for-two" width="160" height="120" aria-label="Tiramisu for Two preview"></canvas></div>
+      <div class="info">
+        <h2>Tiramisu for Two</h2>
+        <div class="chips"><span class="chip">CO-OP</span><span class="chip">SWAP ROLES</span><span class="chip">PHONE OK</span></div>
+        <p>Petit chat noir catches ingredients on the top shelf and tosses them down to Khanh. Play either one and swap anytime. The other plays on their own.</p>
+        <a class="play" href="games/tiramisu-for-two/">Play</a>
+      </div>
+    </div>
+    <section class="board" aria-labelledby="board_tiramisu_for_two">
+      <div class="board-head"><h3 id="board_tiramisu_for_two">TOP 10 · TIRAMISU FOR TWO</h3><button class="refresh" data-game="tiramisu-for-two">Refresh</button></div>
+      <div class="board-scroll"><div id="board-tiramisu-for-two" class="status" data-second="SHARED">Loading scores…</div></div>
+      <div class="note localnote" hidden>Scores are saved on this device until the online leaderboard is connected.</div>
+    </section>
+  </article>
 
   <footer>Made with mascarpone and pixels.</footer>
 </div>
@@ -140,29 +182,78 @@ footer{font-size:17px;color:var(--muted);text-align:center}
   const logo = document.getElementById('logo').getContext('2d');
   drawSprite(logo, GIRL, 1, 1, 5);
 
-  const th = document.getElementById('thumbFactory').getContext('2d');
-  const r = (x, y, w, h, c) => { th.fillStyle = c; th.fillRect(x * 2, y * 2, w * 2, h * 2); };
-  r(0, 0, 80, 60, '#3e2a22');
+  // ---------- thumbnails ----------
+  Object.assign(PAL, { H:'#2e2a3a', P:'#f2a7b5', h:'#7a5236', J:'#3c5a8a', c:'#8a5634', C:'#4a2814', w:'#fff3d8', s:'#b9824a', v:'#7cc95a', V:'#2f7d36', n:'#a7d97c' });
+  const CAT = [
+    "..H........H..",".HPH......HPH.",".HHHHHHHHHHHH.","HHHHHHHHHHHHHH",
+    "HHhhhhhhhhhhHH","HHhhShhhhShhHH","HHSSSSSSSSSSHH","HHSSSSSSSSSSHH",
+    "HHSESESSESESHH","HHSSSSSSSSSSHH","HHSSSSmmSSSSHH","HHHSSSSSSSSHHH",
+    "HHHHHHHHHHHHHH","..HHHWHHWHHH..","..HHHHHHHHHH..","..HHHHHHHHHH..",
+    "....J....J....","...JJ....JJ..."
+  ];
+  const SLICE = ["cccCcccCcc","cCcccCcccC","wwwwwwwwww","wwwwwwwwww","ssssssssss","wwwwwwwwww","ssssssssss","ssssssssss"];
+  const BROC = [".vVv.vV.","vVVvVVvv","VvVVvVVv",".vVVVvv.","..vVVv..","...nn...","...nn...","..nnnn.."];
   const ings = ['#dca45a', '#6b3a1c', '#fff6e2', '#4a2412'];
-  for (let i = 0; i < 4; i++) {
-    const x = 4 + i * 15;
-    r(x, 4, 12, 14, '#120a07'); r(x + 1, 5, 10, 12, '#aab3bf'); r(x + 2, 7, 8, 5, ings[i]);
-    r(x + 4, 18, 4, 3, '#120a07'); r(x + 5, 18, 2, 2, '#7d8590');
+  function scene(canvas) {
+    const g = canvas.getContext('2d'); g.imageSmoothingEnabled = false;
+    const r = (x, y, w, h, c) => { g.fillStyle = c; g.fillRect(x * 2, y * 2, w * 2, h * 2); };
+    const spr = (rows, x, y) => drawSprite(g, rows, x, y, 2);
+    return { g, r, spr };
   }
-  r(0, 42, 64, 4, '#120a07'); r(0, 43, 64, 2, '#555c66');
-  [[6, 2], [26, 4], [46, 3]].forEach(([x, n]) => {
-    r(x, 30, 9, 12, '#120a07'); r(x + 1, 30, 7, 11, '#2f3f48');
-    for (let l = 0; l < n; l++) r(x + 1, 39 - l * 2, 7, 2, ings[l]);
+  const THUMBS = {
+    'tiramisu-factory': ({ r, spr }) => {
+      r(0, 0, 80, 60, '#3e2a22');
+      for (let i = 0; i < 4; i++) {
+        const x = 4 + i * 15;
+        r(x, 4, 12, 14, '#120a07'); r(x + 1, 5, 10, 12, '#aab3bf'); r(x + 2, 7, 8, 5, ings[i]);
+        r(x + 4, 18, 4, 3, '#120a07'); r(x + 5, 18, 2, 2, '#7d8590');
+      }
+      r(0, 42, 64, 4, '#120a07'); r(0, 43, 64, 2, '#555c66');
+      [[6, 2], [26, 4], [46, 3]].forEach(([x, n]) => {
+        r(x, 30, 9, 12, '#120a07'); r(x + 1, 30, 7, 11, '#2f3f48');
+        for (let l = 0; l < n; l++) r(x + 1, 39 - l * 2, 7, 2, ings[l]);
+      });
+      r(64, 42, 16, 18, '#7a4b33');
+    },
+    'tiramisu-rain': ({ r, spr }) => {
+      r(0, 0, 80, 60, '#4a2c20');
+      for (let x = 0; x < 80; x += 8) r(x, 0, 4, 44, '#51311f');
+      r(0, 50, 80, 10, '#3d261b'); r(0, 50, 80, 1, '#120a07');
+      spr(SLICE, 8, 6); spr(SLICE, 56, 14); spr(BROC, 34, 4); spr(SLICE, 24, 22);
+      spr(GIRL, 33, 31);
+    },
+    'khanhs-bakery': ({ r, spr }) => {
+      r(0, 0, 80, 60, '#4a2c20');
+      r(54, 8, 22, 18, '#25302a'); r(56, 10, 18, 2, '#f5bd4f'); r(56, 14, 14, 2, '#9ccc6a'); r(56, 18, 16, 2, '#f08a9a');
+      r(0, 50, 80, 10, '#3d261b'); r(0, 50, 80, 1, '#120a07');
+      spr(GIRL, 22, 32);
+      r(18, 28, 22, 3, '#120a07'); r(19, 29, 20, 1, '#a36a3f');
+      r(22, 16, 14, 12, '#120a07'); r(23, 16, 12, 11, '#2f3f48');
+      ings.concat(['#dca45a']).forEach((c, i) => r(24, 25 - i * 2, 10, 2, c));
+      r(21, 31, 1, 16, '#f7d0ae'); r(36, 31, 1, 16, '#f7d0ae');
+      spr(BROC, 60, 30); r(8, 6, 10, 4, '#120a07'); r(9, 7, 8, 2, '#dca45a');
+    },
+    'tiramisu-for-two': ({ r, spr }) => {
+      r(0, 0, 80, 60, '#4a2c20');
+      r(0, 26, 80, 3, '#8a5634'); r(0, 29, 80, 1, '#120a07');
+      r(0, 30, 80, 20, '#5c3d2e');
+      r(0, 52, 80, 8, '#3d261b'); r(0, 52, 80, 1, '#120a07');
+      spr(CAT, 46, 8);
+      r(44, 4, 18, 5, '#120a07'); r(45, 5, 16, 2, '#d8dde3');
+      spr(GIRL, 18, 34);
+      r(30, 36, 8, 4, '#120a07'); r(31, 37, 6, 2, '#fff6e2');
+      r(40, 40, 2, 2, '#e8566c'); r(44, 38, 2, 2, '#e8566c'); r(42, 39, 2, 2, '#e8566c');
+    }
+  };
+  document.querySelectorAll('canvas[data-thumb]').forEach(cv => {
+    const fn = THUMBS[cv.dataset.thumb]; if (!fn) return;
+    const sc = scene(cv); fn(sc);
+    if (cv.dataset.thumb === 'tiramisu-factory') { sc.g.save(); sc.g.scale(0.5, 0.5); drawSprite(sc.g, GIRL, 133, 48, 2); sc.g.restore(); }
   });
-  r(64, 42, 16, 18, '#7a4b33');
-  const mini = GIRL.map(row => row);
-  th.save(); th.scale(0.5, 0.5);
-  drawSprite(th, mini, 133, 48, 2);
-  th.restore();
 
   // ---------- leaderboards ----------
   const Board = window.PixelCafeBoard;
-  if (Board && !Board.online) document.getElementById('boardNote').hidden = false;
+  if (Board && !Board.online) document.querySelectorAll('.localnote').forEach(n => n.hidden = false);
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
   const fmtDate = iso => { try { return new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }); } catch (e) { return ''; } };
 
@@ -174,7 +265,7 @@ footer{font-size:17px;color:var(--muted);text-align:center}
       const rows = await Board.top(game, 10);
       if (!rows.length) { box.className = 'empty'; box.textContent = 'No scores yet. Be the first one on the board!'; return; }
       box.className = '';
-      box.innerHTML = `<table><thead><tr><th>#</th><th>PLAYER</th><th class="num">CUPS</th><th class="num">SCORE</th><th class="num">DATE</th></tr></thead><tbody>${
+      box.innerHTML = `<table><thead><tr><th>#</th><th>PLAYER</th><th class="num">${box.dataset.second || ''}</th><th class="num">SCORE</th><th class="num">DATE</th></tr></thead><tbody>${
         rows.map((row, i) => `<tr class="${i === 0 ? 'top1' : ''}"><td class="rank">${i + 1}</td><td class="name">${esc(row.name)}</td><td class="num">${row.served ?? ''}</td><td class="num">${row.score}</td><td class="num">${fmtDate(row.created_at)}</td></tr>`).join('')
       }</tbody></table>`;
     } catch (err) {
@@ -182,7 +273,7 @@ footer{font-size:17px;color:var(--muted);text-align:center}
     }
   }
   document.querySelectorAll('.refresh').forEach(b => b.addEventListener('click', () => load(b.dataset.game)));
-  load('tiramisu-factory');
+  document.querySelectorAll('.refresh').forEach(b => load(b.dataset.game));
 })();
 </script>
 </body>

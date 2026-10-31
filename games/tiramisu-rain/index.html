@@ -1,0 +1,623 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Catch falling tiramisu for Khanh and dodge the broccoli. Part of Khanh's Pixel Café.">
+<link rel="icon" href="../../favicon.ico" sizes="any">
+<link rel="icon" href="../../favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../../apple-touch-icon.png">
+<meta name="theme-color" content="#1f130e">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Tiramisu Rain · Khanh's Pixel Café</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=VT323&display=swap">
+<style>
+/* Layout: one-screen arcade cabinet — HUD strip, 2:3 pixel café canvas, hint line. Single dark espresso look by design. */
+:root{
+  --espresso:#1f130e;
+  --roast:#38221a;
+  --cocoa:#7a4b33;
+  --cream:#f4e4c4;
+  --mascarpone:#fff7e8;
+  --berry:#e8566c;
+  --gold:#f5bd4f;
+  --muted:#b39478;
+  --f-display:"Pixelify Sans","VT323",ui-monospace,monospace;
+  --f-body:"VT323",ui-monospace,"Courier New",monospace;
+  color-scheme:dark;
+}
+html{box-sizing:border-box;height:100%}
+*,*::before,*::after{box-sizing:inherit}
+body{height:100%;background:var(--espresso);color:var(--cream);font-family:var(--f-body);font-size:20px;overflow:hidden;-webkit-tap-highlight-color:transparent}
+.app{height:100%;display:flex;flex-direction:column;align-items:center;gap:8px;padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.hud{width:var(--gw,320px);max-width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.score{font-family:var(--f-display);font-weight:700;font-size:22px;color:var(--mascarpone);font-variant-numeric:tabular-nums;letter-spacing:.02em;min-width:0}
+.score small{font-family:var(--f-body);font-weight:400;font-size:18px;color:var(--muted);margin-right:6px;letter-spacing:.04em}
+.combo{font-family:var(--f-display);font-size:15px;color:var(--gold);min-height:1em;text-align:center;flex:1}
+.combo.hot{animation:pop .3s steps(3)}
+.right{display:flex;align-items:center;gap:10px}
+.hearts{display:flex;gap:4px}
+.hearts svg{width:21px;height:18px;fill:var(--berry)}
+.hearts svg.lost{fill:var(--roast)}
+.hearts svg.gain{animation:pop .4s steps(4)}
+@keyframes pop{0%{transform:scale(1.5)}100%{transform:scale(1)}}
+.iconbtn{font-family:var(--f-display);font-weight:700;font-size:14px;color:var(--cream);background:var(--roast);border:2px solid var(--cocoa);padding:3px 8px;cursor:pointer;line-height:1}
+.iconbtn:focus-visible,.btn:focus-visible,.link:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.stage{flex:1;min-height:0;width:100%;display:flex;align-items:center;justify-content:center}
+.screen{position:relative;box-shadow:0 0 0 4px var(--roast),0 0 0 8px #120a07}
+canvas{display:block;width:100%;height:100%;image-rendering:pixelated;touch-action:none;cursor:pointer}
+.overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:18px;text-align:center;background:rgba(24,13,9,.78)}
+.eyebrow{font-family:var(--f-display);font-size:13px;letter-spacing:.18em;color:var(--gold)}
+.overlay h1,.overlay h2{margin:0;font-weight:400;line-height:.9;color:var(--mascarpone);text-wrap:balance}
+.overlay h1{font-size:clamp(40px,12vw,58px)}
+.overlay h2{font-size:clamp(34px,10vw,46px)}
+.overlay p{margin:0;max-width:24ch;line-height:1.05;color:var(--cream)}
+.legend{display:grid;grid-template-columns:auto 1fr;gap:6px 10px;align-items:center;text-align:left;font-size:19px;line-height:1}
+.portrait{width:96px;height:96px;display:grid;place-items:center;background:var(--roast);box-shadow:0 0 0 3px var(--cocoa),0 0 0 6px #120a07}
+.portrait img{width:64px;height:auto;image-rendering:pixelated;animation:bob 1.2s steps(2) infinite}
+@keyframes bob{50%{transform:translateY(-4px)}}
+.bubble{font-family:var(--f-display);font-weight:700;font-size:16px;color:var(--espresso);background:var(--mascarpone);padding:5px 10px;position:relative;box-shadow:0 0 0 2px #120a07}
+.bubble::before{content:"";position:absolute;left:50%;top:-8px;margin-left:-4px;border:4px solid transparent;border-bottom-color:var(--mascarpone)}
+.overlay p.intro{max-width:26ch;font-size:21px;line-height:1.1}
+@media (prefers-reduced-motion:reduce){.portrait img{animation:none}}
+.legend img{width:36px;height:auto;image-rendering:pixelated;justify-self:center}
+.legend b{font-family:var(--f-display);font-size:14px;color:var(--gold);font-weight:700}
+.legend .bad{color:var(--berry)}
+.btn{font-family:var(--f-body);font-size:26px;color:var(--espresso);background:var(--gold);border:0;padding:6px 18px 8px;cursor:pointer;box-shadow:0 4px 0 #a8731f,0 4px 0 2px #120a07;transition:transform .05s}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 #a8731f}
+.stats{display:grid;grid-template-columns:1fr auto;gap:2px 16px;font-size:21px;min-width:180px}
+.stats span:nth-child(even){font-family:var(--f-display);font-weight:700;font-size:17px;color:var(--mascarpone);text-align:right;font-variant-numeric:tabular-nums}
+.badge{font-family:var(--f-display);font-size:13px;background:var(--berry);color:var(--mascarpone);padding:3px 8px;letter-spacing:.08em}
+.best{color:var(--muted);font-size:18px}
+.hint{width:var(--gw,320px);max-width:100%;display:flex;justify-content:space-between;gap:10px;color:var(--muted);font-size:17px;line-height:1}
+.link{background:none;border:0;color:var(--cream);font:inherit;text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:0;white-space:nowrap}
+@media (prefers-reduced-motion:reduce){.combo.hot,.hearts svg.gain{animation:none}}
+.submit{display:flex;gap:6px;width:100%;max-width:250px}
+.submit input{flex:1;min-width:0;font:inherit;font-size:20px;color:var(--mascarpone);background:var(--roast);border:2px solid var(--cocoa);padding:3px 8px}
+.submit input:focus-visible{outline:3px solid var(--gold);outline-offset:1px}
+.submit button{font-family:var(--f-display);font-weight:700;font-size:13px;color:var(--espresso);background:var(--gold);border:0;padding:0 10px;cursor:pointer}
+.submitMsg{font-size:17px;color:var(--muted);min-height:1em;max-width:26ch}
+.back{color:var(--cream);font-size:17px;text-underline-offset:3px}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="hud" id="hud">
+    <div class="score"><small>Score</small><span id="score">0</span></div>
+    <div class="combo" id="combo"></div>
+    <div class="right">
+      <div class="hearts" id="hearts" aria-label="Hearts left"></div>
+      <button class="iconbtn" id="pauseBtn" aria-label="Pause">II</button>
+    </div>
+  </div>
+
+  <div class="stage" id="stage">
+    <div class="screen" id="screen">
+      <canvas id="game" aria-label="Game screen"></canvas>
+
+      <div class="overlay" id="introScr">
+        <div class="eyebrow">PIXEL CAFÉ · 20:42</div>
+        <div class="portrait"><img id="khanhImg" alt="Khanh, a girl with black hair and blunt bangs"></div>
+        <div class="bubble">Hi, I'm Khanh!</div>
+        <p class="intro">Khanh is craving tiramisu like never before. Please buy Khanh a tiramisu, or at least help her eat as much tiramisu as possible in this game.</p>
+        <button class="btn" id="helpBtn">Help Khanh</button>
+      </div>
+
+      <div class="overlay" id="titleScr" hidden>
+        <div class="eyebrow">HOW TO PLAY</div>
+        <h1>Tiramisu Rain</h1>
+        <p>Move Khanh left and right to catch tiramisu in her mouth.</p>
+        <div class="legend">
+          <img id="lgSlice" alt=""><span><b>+10</b> tiramisu slice</span>
+          <img id="lgCup" alt=""><span><b>+30</b> golden cup, +1 heart</span>
+          <img id="lgBroc" alt=""><span><b class="bad">−1 heart</b> broccoli</span>
+        </div>
+        <button class="btn" id="startBtn">Start eating</button>
+        <div class="best" id="bestTitle"></div>
+      </div>
+
+      <div class="overlay" id="pauseScr" hidden>
+        <div class="eyebrow">PAUSED</div>
+        <h2>Quick sip of water</h2>
+        <button class="btn" id="resumeBtn">Keep eating</button>
+      </div>
+
+      <div class="overlay" id="overScr" hidden>
+        <div class="eyebrow">GAME OVER</div>
+        <h2 id="overTitle">So full!</h2>
+        <div class="badge" id="newBest" hidden>NEW RECORD</div>
+        <div class="stats">
+          <span>Score</span><span id="oScore">0</span>
+          <span>Slices eaten</span><span id="oEaten">0</span>
+          <span>Best combo</span><span id="oCombo">0</span>
+          <span>Record</span><span id="oBest">0</span>
+        </div>
+        <form class="submit" id="submitForm" hidden>
+          <input id="nick" maxlength="16" placeholder="Your nickname" aria-label="Nickname for the leaderboard" autocomplete="nickname">
+          <button type="submit" id="submitBtn">Post score</button>
+        </form>
+        <div class="submitMsg" id="submitMsg" aria-live="polite"></div>
+        <button class="btn" id="againBtn">One more round</button>
+        <a class="back" href="../../#tiramisu-rain">See the leaderboard</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="hint">
+    <a class="back" href="../../">← Pixel Café</a>
+    <span>← → or drag your finger</span>
+    <button class="link" id="muteBtn">Sound: on</button>
+  </div>
+</div>
+
+<script>
+(() => {
+  const S = 3, W = 160, H = 240, GROUND = 222;
+  const cv = document.getElementById('game');
+  cv.width = W * S; cv.height = H * S;
+  const ctx = cv.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // ---------- palette & sprites ----------
+  const PAL = {
+    K:'#16131d', k:'#40395a', S:'#f7d0ae', E:'#1b1420', B:'#f39a96', m:'#c4545c', O:'#5a1d22',
+    R:'#d9485f', W:'#fff3e0', L:'#3b2a2a',
+    c:'#8a5634', C:'#4a2814', w:'#fff3d8', s:'#b9824a',
+    G:'#bfe3ee', v:'#7cc95a', V:'#2f7d36', n:'#a7d97c', y:'#f5bd4f'
+  };
+  const OUT = '#120a07';
+
+  const GIRL = [
+    "....KKKKKK....",
+    "..KKKKKKKKKK..",
+    ".KKKkkKKKKKKK.",
+    ".KKkKKKKKKKKK.",
+    "KKKKKKKKKKKKKK",
+    "KKKKKKKKKKKKKK",
+    "KKSSSSSSSSSSKK",
+    "KKSSESSSSESSKK",
+    "KKSSESSSSESSKK",
+    "KKSBSSSSSSBSKK",
+    "KKSSSSmmSSSSKK",
+    "KK.SSSSSSSS.KK",
+    ".K..RWWWWR..K.",
+    "...RRRRRRRR...",
+    "..SRRRRRRRRS..",
+    "..RRRRRRRRRR..",
+    "....L....L....",
+    "...LL....LL..."
+  ];
+  const setPx = (rows, r, c, ch) => { rows[r] = rows[r].slice(0, c) + ch + rows[r].slice(c + 1); };
+  function variant(fn) { const r = GIRL.slice(); fn(r); return r; }
+  const girlWalkA = variant(r => { r[17] = "...LL........."; r[16] = "....L....L...."; });
+  const girlWalkB = variant(r => { r[17] = ".........LL..."; });
+  const girlEat = variant(r => { setPx(r,10,6,'O'); setPx(r,10,7,'O'); setPx(r,11,6,'O'); setPx(r,11,7,'O'); setPx(r,7,4,'S'); setPx(r,7,9,'S'); });
+  const girlHurt = variant(r => { setPx(r,7,4,'S'); setPx(r,7,9,'S'); setPx(r,10,6,'S'); setPx(r,10,7,'S'); setPx(r,11,5,'m'); setPx(r,10,6,'m'); setPx(r,11,7,'m'); setPx(r,10,8,'m'); });
+
+  const SLICE = [
+    "cccCcccCcc",
+    "cCcccCcccC",
+    "wwwwwwwwww",
+    "wwwwwwwwww",
+    "ssssssssss",
+    "wwwwwwwwww",
+    "ssssssssss",
+    "ssssssssss"
+  ];
+  const CUP = [
+    ".GccCcG.",
+    "GcCccCcG",
+    "GwwwwwwG",
+    "GwwwwwwG",
+    "GssssssG",
+    "GwwwwwwG",
+    "GssssssG",
+    "GssssssG",
+    ".GGGGGG."
+  ];
+  const BROC = [
+    ".vVv.vV.",
+    "vVVvVVvv",
+    "VvVVvVVv",
+    ".vVVVvv.",
+    "..vVVv..",
+    "...nn...",
+    "...nn...",
+    "..nnnn.."
+  ];
+
+  function makeSprite(rows, scale = S) {
+    const h = rows.length, w = rows[0].length;
+    const c = document.createElement('canvas');
+    c.width = (w + 2) * scale; c.height = (h + 2) * scale;
+    const g = c.getContext('2d');
+    g.fillStyle = OUT;
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      if (rows[y][x] === '.') continue;
+      for (const [dx, dy] of [[0,0],[1,0],[-1,0],[0,1],[0,-1]]) g.fillRect((x + 1 + dx) * scale, (y + 1 + dy) * scale, scale, scale);
+    }
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      const ch = rows[y][x]; if (ch === '.') continue;
+      g.fillStyle = PAL[ch]; g.fillRect((x + 1) * scale, (y + 1) * scale, scale, scale);
+    }
+    return c;
+  }
+  const SPR = {
+    idle: makeSprite(GIRL), walkA: makeSprite(girlWalkA), walkB: makeSprite(girlWalkB),
+    eat: makeSprite(girlEat), hurt: makeSprite(girlHurt),
+    slice: makeSprite(SLICE), cup: makeSprite(CUP), broc: makeSprite(BROC)
+  };
+  document.getElementById('lgSlice').src = makeSprite(SLICE, 4).toDataURL();
+  document.getElementById('lgCup').src = makeSprite(CUP, 4).toDataURL();
+  document.getElementById('lgBroc').src = makeSprite(BROC, 4).toDataURL();
+  document.getElementById('khanhImg').src = makeSprite(girlEat, 5).toDataURL();
+  document.getElementById('helpBtn').addEventListener('click', () => {
+    document.getElementById('introScr').hidden = true;
+    document.getElementById('titleScr').hidden = false;
+    document.getElementById('startBtn').focus();
+  });
+
+  // ---------- background (drawn once) ----------
+  const bg = document.createElement('canvas');
+  bg.width = W * S; bg.height = H * S;
+  function drawBg() {
+    const g = bg.getContext('2d');
+    const r = (x, y, w, h, col) => { g.fillStyle = col; g.fillRect(x * S, y * S, w * S, h * S); };
+    r(0, 0, W, GROUND, '#4a2c20');
+    for (let x = 0; x < W; x += 12) r(x, 0, 6, 150, '#51311f');
+    // window with night sky
+    r(14, 26, 58, 64, '#2a1810');
+    r(18, 30, 50, 56, '#1b2342');
+    r(18, 62, 50, 24, '#222b4d');
+    const stars = [[24,36],[40,33],[60,48],[30,52],[47,44],[22,70],[63,66],[36,75],[52,58]];
+    stars.forEach(([x, y], i) => r(x, y, 1, 1, i % 3 ? '#fff3c4' : '#9fb3e8'));
+    // moon
+    for (let y = -6; y <= 6; y++) for (let x = -6; x <= 6; x++) {
+      if (x*x + y*y <= 36 && !((x-3)*(x-3) + (y+2)*(y+2) <= 26)) r(54 + x, 44 + y, 1, 1, '#f7e7a8');
+    }
+    r(42, 30, 2, 56, '#2a1810'); r(18, 57, 50, 2, '#2a1810');
+    r(12, 88, 62, 4, '#7a4b33');
+    // hanging lamp + glow
+    r(122, 0, 1, 22, '#16131d');
+    const glow = g.createRadialGradient(122.5*S, 30*S, 2*S, 122.5*S, 30*S, 46*S);
+    glow.addColorStop(0, 'rgba(245,189,79,.30)'); glow.addColorStop(1, 'rgba(245,189,79,0)');
+    g.fillStyle = glow; g.fillRect(70*S, 0, 90*S, 90*S);
+    r(116, 22, 13, 3, '#f5bd4f'); r(114, 25, 17, 3, '#d99a32'); r(120, 28, 5, 2, '#fff1c2');
+    // shelf with jars
+    r(96, 62, 54, 3, '#7a4b33'); r(96, 65, 54, 1, '#2a1810');
+    r(100, 52, 7, 10, '#c7e4ee'); r(101, 56, 5, 5, '#5a3418');
+    r(111, 55, 9, 7, '#fff3e0'); r(120, 57, 2, 3, '#fff3e0'); r(113, 54, 5, 1, '#2a1810');
+    r(127, 50, 8, 12, '#d9485f'); r(128, 48, 6, 2, '#f7d0ae');
+    r(140, 54, 6, 8, '#a35a35'); r(139, 46, 3, 8, '#5aa144'); r(142, 44, 3, 10, '#7cc95a'); r(145, 47, 3, 7, '#2f7d36');
+    // chalkboard menu
+    r(94, 92, 58, 42, '#7a4b33'); r(96, 94, 54, 38, '#25302a');
+    g.fillStyle = '#e9e2cf'; g.textBaseline = 'top';
+    g.font = `700 ${7*S}px "Pixelify Sans", monospace`;
+    g.fillText('MENU', 100*S, 97*S);
+    g.font = `${8*S}px "VT323", monospace`;
+    g.fillStyle = '#f5bd4f'; g.fillText('tiramisu', 100*S, 107*S);
+    g.fillStyle = '#c9c2ae'; g.fillText('tiramisu', 100*S, 115*S); g.fillText('tiramisu!', 100*S, 123*S);
+    // wainscot
+    r(0, 150, W, 2, '#2a1810');
+    r(0, 152, W, GROUND - 152, '#5e3a28');
+    for (let x = 4; x < W; x += 26) { r(x, 158, 20, 56, '#683f2b'); r(x, 158, 20, 1, '#7a4b33'); r(x, 213, 20, 1, '#3b2419'); }
+    // floor
+    for (let y = GROUND; y < H; y += 6) for (let x = 0; x < W; x += 8) r(x, y, 8, 6, ((x/8 + (y-GROUND)/6) % 2) ? '#2e1c14' : '#3d261b');
+    r(0, GROUND, W, 1, '#120a07');
+  }
+  drawBg();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(drawBg);
+
+  // ---------- state ----------
+  const els = {
+    score: document.getElementById('score'), combo: document.getElementById('combo'), hearts: document.getElementById('hearts'),
+    titleScr: document.getElementById('titleScr'), pauseScr: document.getElementById('pauseScr'), overScr: document.getElementById('overScr'),
+    bestTitle: document.getElementById('bestTitle'), muteBtn: document.getElementById('muteBtn')
+  };
+  let best = 0;
+  try { best = parseInt(localStorage.getItem('tiramisu-best') || '0', 10) || 0; } catch (e) {}
+  const showBest = () => { els.bestTitle.textContent = best ? `Your record: ${best}` : ''; };
+  showBest();
+
+  let mode = 'title';
+  let P, items, parts, floats, splats, score, lives, combo, maxCombo, eaten, t, spawnT, shake;
+  function reset() {
+    P = { x: 73, y: GROUND - 18, walkT: 0, moving: false, eatT: 0, hurtT: 0 };
+    items = []; parts = []; floats = []; splats = [];
+    score = 0; lives = 3; combo = 0; maxCombo = 0; eaten = 0; t = 0; spawnT = 0.6; shake = 0;
+    updateHud(false);
+  }
+
+  const HEART = '<svg viewBox="0 0 7 6" shape-rendering="crispEdges" aria-hidden="true"><path d="M1 0h2v1h1V0h2v1h1v2H6v1H5v1H4v1H3V5H2V4H1V3H0V1h1z"/></svg>';
+  let lastLives = 3;
+  function updateHud(comboPop) {
+    els.score.textContent = score;
+    const mult = combo >= 10 ? 3 : combo >= 5 ? 2 : 1;
+    els.combo.textContent = combo >= 3 ? (mult > 1 ? `COMBO ${combo} · x${mult}` : `COMBO ${combo}`) : '';
+    if (comboPop && combo >= 3) { els.combo.classList.remove('hot'); void els.combo.offsetWidth; els.combo.classList.add('hot'); }
+    els.hearts.innerHTML = '';
+    for (let i = 0; i < 3; i++) {
+      const d = document.createElement('span'); d.innerHTML = HEART;
+      const s = d.firstChild;
+      if (i >= lives) s.classList.add('lost');
+      if (lives > lastLives && i === lives - 1) s.classList.add('gain');
+      els.hearts.appendChild(s);
+    }
+    els.hearts.setAttribute('aria-label', `${lives} hearts left`);
+    lastLives = lives;
+  }
+
+  // ---------- sound ----------
+  let actx = null, muted = false;
+  function initAudio() {
+    if (actx) { if (actx.state === 'suspended') actx.resume(); return; }
+    try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { actx = null; }
+  }
+  function beep(freq, dur, type = 'square', vol = 0.05, slide = 0, delay = 0) {
+    if (muted || !actx) return;
+    const t0 = actx.currentTime + delay;
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.type = type; o.frequency.setValueAtTime(freq, t0);
+    if (slide) o.frequency.exponentialRampToValueAtTime(freq * slide, t0 + dur);
+    g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    o.connect(g).connect(actx.destination); o.start(t0); o.stop(t0 + dur + 0.02);
+  }
+  const sfx = {
+    nom: (m) => { beep(520 + m * 90, 0.07, 'square', 0.045, 1.5); beep(880 + m * 90, 0.06, 'square', 0.03, 1, 0.05); },
+    gold: () => [660, 830, 990, 1320].forEach((f, i) => beep(f, 0.09, 'square', 0.04, 1, i * 0.06)),
+    yuck: () => { beep(180, 0.25, 'sawtooth', 0.05, 0.5); },
+    over: () => [440, 370, 311, 262].forEach((f, i) => beep(f, 0.18, 'triangle', 0.06, 1, i * 0.16)),
+    start: () => [523, 659, 784].forEach((f, i) => beep(f, 0.08, 'square', 0.04, 1, i * 0.07))
+  };
+  els.muteBtn.addEventListener('click', () => {
+    muted = !muted; els.muteBtn.textContent = `Sound: ${muted ? 'off' : 'on'}`;
+  });
+
+  // ---------- input ----------
+  const keys = { left: false, right: false };
+  let pointerX = null;
+  addEventListener('keydown', e => {
+    if (e.target && e.target.tagName === 'INPUT') return;
+    if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') { keys.left = true; e.preventDefault(); }
+    if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') { keys.right = true; e.preventDefault(); }
+    if ((e.key === ' ' || e.key === 'Enter') && (mode === 'title' || mode === 'over') && document.activeElement.tagName !== 'BUTTON') { e.preventDefault(); start(); }
+    if ((e.key === 'p' || e.key === 'P' || e.key === 'Escape')) togglePause();
+  });
+  addEventListener('keyup', e => {
+    if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = false;
+    if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = false;
+  });
+  const toLogicalX = e => { const r = cv.getBoundingClientRect(); return (e.clientX - r.left) / r.width * W; };
+  cv.addEventListener('pointerdown', e => { pointerX = toLogicalX(e); try { cv.setPointerCapture(e.pointerId); } catch (_) {} });
+  cv.addEventListener('pointermove', e => { if (pointerX !== null) pointerX = toLogicalX(e); });
+  const endPtr = () => { pointerX = null; };
+  cv.addEventListener('pointerup', endPtr); cv.addEventListener('pointercancel', endPtr);
+
+  document.getElementById('startBtn').addEventListener('click', start);
+  document.getElementById('againBtn').addEventListener('click', start);
+  document.getElementById('resumeBtn').addEventListener('click', togglePause);
+  document.getElementById('pauseBtn').addEventListener('click', togglePause);
+  document.addEventListener('visibilitychange', () => { if (document.hidden && mode === 'play') togglePause(); });
+
+  function start() {
+    initAudio(); reset(); mode = 'play';
+    document.getElementById('introScr').hidden = true;
+    els.titleScr.hidden = true; els.overScr.hidden = true; els.pauseScr.hidden = true;
+    sfx.start(); cv.focus?.();
+  }
+  function togglePause() {
+    if (mode === 'play') { mode = 'paused'; els.pauseScr.hidden = false; }
+    else if (mode === 'paused') { mode = 'play'; els.pauseScr.hidden = true; initAudio(); }
+  }
+  function gameOver() {
+    mode = 'over'; sfx.over();
+    const isNew = score > best;
+    if (isNew) { best = score; try { localStorage.setItem('tiramisu-best', String(best)); } catch (e) {} }
+    document.getElementById('overTitle').textContent =
+      eaten >= 40 ? 'So full!' : eaten >= 15 ? 'Delicious!' : 'Still craving…';
+    document.getElementById('oScore').textContent = score;
+    document.getElementById('oEaten').textContent = eaten;
+    document.getElementById('oCombo').textContent = maxCombo;
+    document.getElementById('oBest').textContent = best;
+    document.getElementById('newBest').hidden = !(isNew && score > 0);
+    window.__pcRun && window.__pcRun(score, eaten);
+    showBest();
+    setTimeout(() => { els.overScr.hidden = false; }, 500);
+  }
+
+  // ---------- gameplay ----------
+  const lerp = (a, b, k) => a + (b - a) * k;
+  const rand = (a, b) => a + Math.random() * (b - a);
+  const DIM = { slice: [10, 8], cup: [8, 9], broc: [8, 8] };
+
+  function spawn(demo) {
+    const d = Math.min(1, t / 90);
+    let kind = 'slice';
+    const roll = Math.random();
+    if (roll < 0.06) kind = 'cup';
+    else if (roll < 0.06 + lerp(0.2, 0.38, d)) kind = 'broc';
+    const [w] = DIM[kind];
+    items.push({ kind, x: rand(3, W - w - 3), y: -12, vy: lerp(42, 125, d) * rand(0.85, 1.15) * (demo ? 0.6 : 1), sway: Math.random() * 6.28 });
+  }
+  function crumbs(x, y, n, cols) {
+    for (let i = 0; i < n; i++) parts.push({ x, y, vx: rand(-40, 40), vy: rand(-70, -20), life: rand(0.35, 0.7), col: cols[i % cols.length] });
+  }
+  function floatText(x, y, txt, col, font) { floats.push({ x, y, txt, col, font, life: 0.9 }); }
+  const overlap = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+
+  function update(dt) {
+    const playing = mode === 'play';
+    if (mode === 'paused') return;
+    t += dt;
+
+    // player
+    if (playing) {
+      let dir = 0;
+      if (keys.left) dir -= 1;
+      if (keys.right) dir += 1;
+      if (pointerX !== null) {
+        const target = pointerX - 7, diff = target - P.x;
+        dir = Math.abs(diff) < 1.5 ? 0 : Math.sign(diff) * Math.min(1, Math.abs(diff) / 6);
+      }
+      P.x = Math.max(1, Math.min(W - 15, P.x + dir * 105 * dt));
+      P.moving = dir !== 0;
+    } else P.moving = false;
+    if (P.moving) P.walkT += dt; else P.walkT = 0;
+    P.eatT = Math.max(0, P.eatT - dt);
+    P.hurtT = Math.max(0, P.hurtT - dt);
+    shake = Math.max(0, shake - dt);
+
+    // spawning
+    spawnT -= dt;
+    if (spawnT <= 0) {
+      spawn(!playing);
+      const d = Math.min(1, t / 90);
+      spawnT = (playing ? lerp(0.85, 0.36, d) : 1.1) * rand(0.8, 1.2);
+    }
+
+    const head = { x: P.x + 1, y: P.y - 1, w: 12, h: 13 };
+    const body = { x: P.x + 2, y: P.y + 2, w: 10, h: 16 };
+    for (let i = items.length - 1; i >= 0; i--) {
+      const it = items[i];
+      it.y += it.vy * dt;
+      if (it.kind === 'cup') it.sway += dt * 5;
+      const [w, h] = DIM[it.kind];
+      const box = { x: it.x, y: it.y, w, h };
+
+      if (playing) {
+        if (it.kind !== 'broc' && overlap(box, head)) {
+          combo++; maxCombo = Math.max(maxCombo, combo); eaten++;
+          const mult = combo >= 10 ? 3 : combo >= 5 ? 2 : 1;
+          const pts = (it.kind === 'cup' ? 30 : 10) * mult;
+          score += pts; P.eatT = 0.22;
+          crumbs(P.x + 7, P.y + 10, it.kind === 'cup' ? 10 : 6, it.kind === 'cup' ? ['#f5bd4f', '#fff3d8', '#8a5634'] : ['#fff3d8', '#8a5634', '#b9824a']);
+          floatText(P.x + 7, P.y - 4, `+${pts}`, it.kind === 'cup' ? '#f5bd4f' : '#fff7e8', 'px');
+          if (it.kind === 'cup') { if (lives < 3) lives++; sfx.gold(); } else sfx.nom(mult);
+          items.splice(i, 1); updateHud(true); continue;
+        }
+        if (it.kind === 'broc' && P.hurtT <= 0 && overlap(box, body)) {
+          lives--; combo = 0; P.hurtT = 0.9; shake = 0.25;
+          crumbs(it.x + 4, it.y + 4, 8, ['#7cc95a', '#2f7d36']);
+          floatText(P.x + 7, P.y - 4, 'Yuck!', '#7cc95a', 'vt');
+          sfx.yuck(); items.splice(i, 1); updateHud(false);
+          if (lives <= 0) gameOver();
+          continue;
+        }
+      }
+      if (it.y + h >= GROUND) {
+        if (it.kind !== 'broc') {
+          splats.push({ x: it.x + w / 2, life: 1.6, kind: it.kind });
+          if (playing && combo > 0) { combo = 0; updateHud(false); }
+        } else crumbs(it.x + 4, GROUND - 1, 3, ['#7cc95a']);
+        items.splice(i, 1);
+      }
+    }
+    for (let i = parts.length - 1; i >= 0; i--) {
+      const p = parts[i]; p.life -= dt; p.vy += 220 * dt; p.x += p.vx * dt; p.y += p.vy * dt;
+      if (p.y > GROUND - 1) { p.y = GROUND - 1; p.vy *= -0.3; p.vx *= 0.6; }
+      if (p.life <= 0) parts.splice(i, 1);
+    }
+    for (let i = floats.length - 1; i >= 0; i--) { const f = floats[i]; f.life -= dt; f.y -= 22 * dt; if (f.life <= 0) floats.splice(i, 1); }
+    for (let i = splats.length - 1; i >= 0; i--) { splats[i].life -= dt; if (splats[i].life <= 0) splats.splice(i, 1); }
+  }
+
+  function render() {
+    ctx.save();
+    if (shake > 0 && !reduceMotion) ctx.translate(Math.round(rand(-2, 2)) * S, Math.round(rand(-1, 1)) * S);
+    ctx.drawImage(bg, 0, 0);
+    const R = Math.round;
+
+    for (const s of splats) {
+      ctx.globalAlpha = Math.min(1, s.life);
+      ctx.fillStyle = '#fff3d8'; ctx.fillRect(R(s.x - 5) * S, (GROUND - 2) * S, 10 * S, 2 * S);
+      ctx.fillStyle = '#8a5634'; ctx.fillRect(R(s.x - 3) * S, (GROUND - 3) * S, 6 * S, 1 * S);
+      ctx.fillStyle = '#b9824a'; ctx.fillRect(R(s.x - 6) * S, (GROUND - 1) * S, 3 * S, 1 * S); ctx.fillRect(R(s.x + 3) * S, (GROUND - 1) * S, 3 * S, 1 * S);
+    }
+    ctx.globalAlpha = 1;
+
+    for (const it of items) {
+      const sx = it.kind === 'cup' ? Math.sin(it.sway) * 1.5 : 0;
+      ctx.drawImage(SPR[it.kind], R(it.x + sx - 1) * S, R(it.y - 1) * S);
+      if (it.kind === 'cup' && Math.sin(t * 10 + it.sway) > 0.3) {
+        ctx.fillStyle = '#fff1c2';
+        const cx = R(it.x + sx + 9), cy = R(it.y - 2);
+        ctx.fillRect(cx * S, (cy - 1) * S, S, 3 * S); ctx.fillRect((cx - 1) * S, cy * S, 3 * S, S);
+      }
+    }
+
+    // player
+    let spr = SPR.idle;
+    if (P.hurtT > 0.6) spr = SPR.hurt;
+    else if (P.eatT > 0) spr = SPR.eat;
+    else if (P.moving) spr = (Math.floor(P.walkT * 8) % 2) ? SPR.walkA : SPR.walkB;
+    const blink = P.hurtT > 0 && Math.floor(P.hurtT * 14) % 2 === 0;
+    ctx.globalAlpha = blink ? 0.35 : 1;
+    ctx.fillStyle = 'rgba(18,10,7,.45)';
+    ctx.fillRect(R(P.x + 2) * S, (GROUND) * S, 10 * S, 1 * S);
+    ctx.drawImage(spr, R(P.x - 1) * S, R(P.y - 1) * S);
+    ctx.globalAlpha = 1;
+
+    for (const p of parts) { ctx.fillStyle = p.col; ctx.fillRect(R(p.x) * S, R(p.y) * S, S, S); }
+
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    for (const f of floats) {
+      ctx.globalAlpha = Math.min(1, f.life * 2);
+      ctx.font = f.font === 'vt' ? `${11 * S}px "VT323", monospace` : `700 ${8 * S}px "Pixelify Sans", monospace`;
+      ctx.lineWidth = 2 * S; ctx.strokeStyle = OUT; ctx.lineJoin = 'round';
+      ctx.strokeText(f.txt, R(f.x) * S, R(f.y) * S);
+      ctx.fillStyle = f.col; ctx.fillText(f.txt, R(f.x) * S, R(f.y) * S);
+    }
+    ctx.globalAlpha = 1;
+    ctx.restore();
+  }
+
+  reset();
+  let last = performance.now();
+  function loop(now) {
+    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    update(dt); render();
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+
+  // ---------- sizing ----------
+  const stage = document.getElementById('stage'), screen = document.getElementById('screen');
+  function fit() {
+    const r = stage.getBoundingClientRect();
+    let gw = Math.min(r.width - 16, (r.height - 16) * 2 / 3, 520);
+    gw = Math.max(160, Math.floor(gw));
+    screen.style.width = gw + 'px'; screen.style.height = Math.floor(gw * 1.5) + 'px';
+    document.documentElement.style.setProperty('--gw', gw + 'px');
+  }
+  new ResizeObserver(fit).observe(stage); fit();
+})();
+</script>
+<script src="../../js/leaderboard.js"></script>
+<script>
+(() => {
+  const q = id => document.getElementById(id);
+  let lastRun = null;
+  window.__pcRun = (score, second) => {
+    lastRun = { score, second };
+    q('nick').value = window.PixelCafeBoard ? PixelCafeBoard.lastName() : '';
+    q('submitForm').hidden = !(window.PixelCafeBoard && score > 0);
+    q('submitBtn').disabled = false;
+    q('submitMsg').textContent = '';
+  };
+  q('submitForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    if (!lastRun || !window.PixelCafeBoard) return;
+    q('submitBtn').disabled = true; q('submitMsg').textContent = 'Posting…';
+    try {
+      const res = await PixelCafeBoard.submit('tiramisu-rain', q('nick').value, lastRun.score, lastRun.second);
+      q('submitForm').hidden = true;
+      q('submitMsg').textContent = res.online ? 'Posted to the café leaderboard!' : 'Saved on this device. The online board is not set up yet.';
+    } catch (err) { q('submitMsg').textContent = err.message; q('submitBtn').disabled = false; }
+  });
+})();
+</script>
+</body>
+</html>
