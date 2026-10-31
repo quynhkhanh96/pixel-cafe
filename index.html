@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Khanh's Pixel Café</title>
+<meta name="description" content="Tiny pixel games about tiramisu, with a leaderboard for each game.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=VT323&display=swap">
+<style>
+/* Layout: a café menu board — neon-ish sign hero, one column of game cards, each with its own leaderboard ticket. Single dark espresso look by design. */
+:root{
+  --espresso:#1f130e;
+  --roast:#38221a;
+  --cocoa:#7a4b33;
+  --cream:#f4e4c4;
+  --mascarpone:#fff7e8;
+  --gold:#f5bd4f;
+  --berry:#e8566c;
+  --muted:#b39478;
+  --ticket:#f6ecd6;
+  --ink:#2b1a12;
+  --f-display:"Pixelify Sans","VT323",ui-monospace,monospace;
+  --f-body:"VT323",ui-monospace,"Courier New",monospace;
+  color-scheme:dark;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--espresso);color:var(--cream);font-family:var(--f-body);font-size:21px;line-height:1.15}
+img,canvas{max-width:100%}
+[hidden]{display:none!important}
+.wrap{max-width:680px;margin:0 auto;padding-block:28px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:28px}
+header{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.logo{width:84px;height:84px;flex:none;background:var(--roast);box-shadow:0 0 0 3px var(--cocoa),0 0 0 6px #120a07;display:grid;place-items:center}
+.logo canvas{width:56px;image-rendering:pixelated}
+.eyebrow{font-family:var(--f-display);font-size:13px;letter-spacing:.2em;color:var(--gold)}
+h1{margin:4px 0 2px;font-family:var(--f-display);font-weight:700;font-size:clamp(34px,8vw,52px);line-height:.95;color:var(--mascarpone);text-wrap:balance;text-shadow:3px 3px 0 #120a07}
+.tag{margin:0;color:var(--muted);max-width:40ch}
+.card{background:var(--roast);box-shadow:0 0 0 3px #120a07;display:flex;flex-direction:column}
+.card-top{display:grid;grid-template-columns:160px 1fr;gap:16px;padding:16px}
+@media (max-width:520px){.card-top{grid-template-columns:1fr}}
+.thumb{background:#2a1c16;box-shadow:inset 0 0 0 2px #120a07;display:grid;place-items:center;aspect-ratio:4/3;max-width:100%}
+.thumb canvas{width:100%;image-rendering:pixelated}
+.info{display:flex;flex-direction:column;gap:8px;min-width:0}
+.info h2{margin:0;font-family:var(--f-display);font-weight:700;font-size:26px;color:var(--mascarpone)}
+.info p{margin:0;max-width:44ch}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{font-family:var(--f-display);font-size:11px;letter-spacing:.08em;padding:3px 7px;background:#4a2f22;color:var(--cream)}
+.play{align-self:flex-start;font-family:var(--f-body);font-size:25px;color:var(--espresso);background:var(--gold);text-decoration:none;padding:4px 18px 6px;box-shadow:0 4px 0 #a8731f,0 4px 0 2px #120a07;margin-top:4px}
+.play:active{transform:translateY(3px);box-shadow:0 1px 0 #a8731f}
+.play:focus-visible,.refresh:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+.board{background:var(--ticket);color:var(--ink);margin:0 16px 16px;padding:10px 12px 12px;box-shadow:0 0 0 2px #120a07}
+.board-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:6px}
+.board-head h3{margin:0;font-family:var(--f-display);font-size:14px;letter-spacing:.12em}
+.refresh{background:none;border:0;font:inherit;font-size:18px;color:#8a6a52;text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:0}
+.board-scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:20px;font-variant-numeric:tabular-nums}
+th{font-family:var(--f-display);font-size:11px;letter-spacing:.1em;text-align:left;color:#8a6a52;font-weight:500;padding:2px 6px 4px}
+td{padding:3px 6px;border-top:1px dashed #d8c7a6;white-space:nowrap}
+td.num,th.num{text-align:right}
+td.name{white-space:normal;word-break:break-word}
+tr.top1 td{font-weight:700}
+.rank{font-family:var(--f-display);font-size:14px;width:2.2em}
+tr.top1 .rank{color:#b8860b}
+.empty,.status{font-size:19px;color:#8a6a52;padding:6px 0 2px}
+.note{font-size:17px;color:#8a6a52;margin-top:6px}
+.oven h2{margin:0 0 10px;font-family:var(--f-display);font-size:14px;letter-spacing:.16em;color:var(--gold);font-weight:700}
+.oven ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+.oven li{background:#2a1c16;box-shadow:0 0 0 2px #120a07;padding:10px 12px;display:flex;flex-direction:column;gap:2px}
+.oven li b{font-family:var(--f-display);font-size:15px;color:var(--cream)}
+.oven li span{font-size:18px;color:var(--muted)}
+footer{font-size:17px;color:var(--muted);text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo"><canvas id="logo" width="80" height="100" aria-label="Khanh, pixel art"></canvas></div>
+    <div>
+      <div class="eyebrow">OPEN LATE · EST. 2026</div>
+      <h1>Khanh's Pixel Café</h1>
+      <p class="tag">Tiny pixel games about tiramisu. Play, post your score, and try to take the top spot.</p>
+    </div>
+  </header>
+
+  <article class="card" id="tiramisu-factory">
+    <div class="card-top">
+      <div class="thumb"><canvas id="thumbFactory" width="160" height="120" aria-label="Tiramisu Factory preview"></canvas></div>
+      <div class="info">
+        <h2>Tiramisu Factory</h2>
+        <div class="chips"><span class="chip">CONVEYOR</span><span class="chip">TIMING</span><span class="chip">PHONE OK</span></div>
+        <p>Cups ride a looping belt. Tap the six machines to drop ladyfinger, espresso, mascarpone and toppings in the right order. Khanh eats every finished cup.</p>
+        <a class="play" href="games/tiramisu-factory/">Play</a>
+      </div>
+    </div>
+    <section class="board" aria-labelledby="boardFactoryTitle">
+      <div class="board-head"><h3 id="boardFactoryTitle">TOP 10 · TIRAMISU FACTORY</h3><button class="refresh" data-game="tiramisu-factory">Refresh</button></div>
+      <div class="board-scroll"><div id="board-tiramisu-factory" class="status">Loading scores…</div></div>
+      <div class="note" id="boardNote" hidden>Scores are saved on this device until the online leaderboard is connected.</div>
+    </section>
+  </article>
+
+  <section class="oven" aria-labelledby="ovenTitle">
+    <h2 id="ovenTitle">STILL IN THE OVEN</h2>
+    <ul>
+      <li><b>Tiramisu Rain</b><span>Catch falling slices, dodge broccoli.</span></li>
+      <li><b>Khanh's Bakery</b><span>Stack layers in recipe order.</span></li>
+      <li><b>Tiramisu for Two</b><span>Khanh and Petit chat noir cook as a team.</span></li>
+    </ul>
+  </section>
+
+  <footer>Made with mascarpone and pixels.</footer>
+</div>
+
+<script src="js/leaderboard.js"></script>
+<script>
+(() => {
+  // ---------- pixel art (same sprites as the games) ----------
+  const PAL = { K:'#16131d', k:'#40395a', S:'#f7d0ae', E:'#1b1420', B:'#f39a96', m:'#c4545c', R:'#d9485f', W:'#fff3e0', L:'#3b2a2a' };
+  const GIRL = [
+    "....KKKKKK....","..KKKKKKKKKK..",".KKKkkKKKKKKK.",".KKkKKKKKKKKK.",
+    "KKKKKKKKKKKKKK","KKKKKKKKKKKKKK","KKSSSSSSSSSSKK","KKSSSSSSSSSSKK",
+    "KKSESSSSSSESKK","KKSBSSSSSSBSKK","KKSSSSmmSSSSKK","KK.SSSSSSSS.KK",
+    ".K..RWWWWR..K.","..SRRRRRRRRS..","...RRRRRRRR...","..RRRRRRRRRR..",
+    "....L....L....","...LL....LL..."
+  ];
+  // happy closed eyes
+  GIRL[8] = "KKSESESSESESKK";
+  function drawSprite(g, rows, ox, oy, s) {
+    g.fillStyle = '#120a07';
+    rows.forEach((row, y) => [...row].forEach((ch, x) => { if (ch !== '.') g.fillRect((ox + x - 1) * s, (oy + y - 1) * s, 3 * s, 3 * s); }));
+    rows.forEach((row, y) => [...row].forEach((ch, x) => { if (ch !== '.') { g.fillStyle = PAL[ch]; g.fillRect((ox + x) * s, (oy + y) * s, s, s); } }));
+  }
+  const logo = document.getElementById('logo').getContext('2d');
+  drawSprite(logo, GIRL, 1, 1, 5);
+
+  const th = document.getElementById('thumbFactory').getContext('2d');
+  const r = (x, y, w, h, c) => { th.fillStyle = c; th.fillRect(x * 2, y * 2, w * 2, h * 2); };
+  r(0, 0, 80, 60, '#3e2a22');
+  const ings = ['#dca45a', '#6b3a1c', '#fff6e2', '#4a2412'];
+  for (let i = 0; i < 4; i++) {
+    const x = 4 + i * 15;
+    r(x, 4, 12, 14, '#120a07'); r(x + 1, 5, 10, 12, '#aab3bf'); r(x + 2, 7, 8, 5, ings[i]);
+    r(x + 4, 18, 4, 3, '#120a07'); r(x + 5, 18, 2, 2, '#7d8590');
+  }
+  r(0, 42, 64, 4, '#120a07'); r(0, 43, 64, 2, '#555c66');
+  [[6, 2], [26, 4], [46, 3]].forEach(([x, n]) => {
+    r(x, 30, 9, 12, '#120a07'); r(x + 1, 30, 7, 11, '#2f3f48');
+    for (let l = 0; l < n; l++) r(x + 1, 39 - l * 2, 7, 2, ings[l]);
+  });
+  r(64, 42, 16, 18, '#7a4b33');
+  const mini = GIRL.map(row => row);
+  th.save(); th.scale(0.5, 0.5);
+  drawSprite(th, mini, 133, 48, 2);
+  th.restore();
+
+  // ---------- leaderboards ----------
+  const Board = window.PixelCafeBoard;
+  if (Board && !Board.online) document.getElementById('boardNote').hidden = false;
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+  const fmtDate = iso => { try { return new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }); } catch (e) { return ''; } };
+
+  async function load(game) {
+    const box = document.getElementById(`board-${game}`);
+    if (!Board) { box.className = 'status'; box.textContent = 'Leaderboard script did not load.'; return; }
+    box.className = 'status'; box.textContent = 'Loading scores…';
+    try {
+      const rows = await Board.top(game, 10);
+      if (!rows.length) { box.className = 'empty'; box.textContent = 'No scores yet. Be the first one on the board!'; return; }
+      box.className = '';
+      box.innerHTML = `<table><thead><tr><th>#</th><th>PLAYER</th><th class="num">CUPS</th><th class="num">SCORE</th><th class="num">DATE</th></tr></thead><tbody>${
+        rows.map((row, i) => `<tr class="${i === 0 ? 'top1' : ''}"><td class="rank">${i + 1}</td><td class="name">${esc(row.name)}</td><td class="num">${row.served ?? ''}</td><td class="num">${row.score}</td><td class="num">${fmtDate(row.created_at)}</td></tr>`).join('')
+      }</tbody></table>`;
+    } catch (err) {
+      box.className = 'status'; box.textContent = `${err.message} Tap Refresh to try again.`;
+    }
+  }
+  document.querySelectorAll('.refresh').forEach(b => b.addEventListener('click', () => load(b.dataset.game)));
+  load('tiramisu-factory');
+})();
+</script>
+</body>
+</html>
